@@ -13,6 +13,7 @@ my $timeout=5;
 my $CurPort=0;
 my $DEBUG = "off";	# Set to "on" to enable
 my $WebFile = "/var/www/html/TrackerOutput.html";
+my $FileVersion = "";
 
 my $WebHeader = <<'END_MESSAGE';
 <html>
@@ -31,16 +32,12 @@ open(FH, '>', $WebFile) or die $!;
 print FH "$WebHeader\n";
 
 print "tracker checker v$VERSION\n";
-print "============================\n";
+print "=========================\n";
 
 my $CurrentTracker = "";
 
-print "Loading in $HOME/.trackers:\n";
-if (! -f $TRACKERSFILE)
-{
-	print "trackers list not found, running updater:\n";
-	system("updatetrackers");
-}
+print "Updating $HOME/.trackers:\n";
+system("updatetrackers \>/dev/null");
 
 my $SawVersion = "";
 my $NumTrackers = 0;
@@ -56,6 +53,7 @@ while(<$file>)
 	if ($SawVersion eq "")
 	{
 		print "File version: $CurLine\n";
+		$FileVersion = $CurLine;
 		$SawVersion = "true";
 	}
 	else
@@ -129,7 +127,7 @@ foreach (@Trackers)
 my $date = localtime->strftime('%m/%d/%Y %H:%M:%S');
 print FH "</table>\n";
 print FH "Add your tracker <a href=\"https://mytorrent.retro-os.live/index.php/forum/tracker-submission\">link here</a> - To get our linux torrent tools download <a href=\"/index.php/downloads/download/8-tools/56-torrent-tools-1-1\">this file</a>.<hr>\n";
-print FH "List updated: $date\n";
+print FH "List updated: $date - File version: $FileVersion\n";
 print FH "</body>\n</html>\n";
 close (FH);
 exit 0;
