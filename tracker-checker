@@ -11,6 +11,22 @@ my @Trackers = ();
 my $timeout=5;
 my $CurPort=0;
 my $DEBUG = "off";	# Set to "on" to enable
+my $WebFile = "/var/www/html/TrackerOutput.html";
+
+my $WebHeader = <<'END_MESSAGE';
+<html>
+<head>
+</head>
+<body>
+<title>Active Trackers in our list</title>
+<h1 align=center>Active Trackers in our list</h1>
+<hr>
+<table border=2>
+<tr><td><b>Protocol</b></td><td><b>Host</b></td><td><b>Port</b></td><td><b>Status</b></td></tr>
+END_MESSAGE
+
+open(FH, '>', $WebFile) or die $!;
+print FH "$WebHeader\n";
 
 print "tracker checker v$VERSION\n";
 print "============================\n";
@@ -89,7 +105,7 @@ sub CheckTracker
         my $host_hr = check_ports($CurHost, $timeout, \%port_hash);
         my $CurStatus = $host_hr->{tcp}{$CurPort}{open} ? "Active" : "Unreachable";
 	print "$CurStatus\n";
-
+	print FH "<tr><td>$TrackerProtocol</td><td>$CurHost</td><td>$CurPort</td><td>$CurStatus</td></tr>\n";
 	if ($DEBUG eq "on")
 	{
 		my $HostTable = sprintf("%-30s : %-5s : %s", $CurHost, $CurPort, $CurStatus);
@@ -108,4 +124,8 @@ foreach (@Trackers)
 	CheckTracker();
 }
 
+print FH "</table>\n";
+print FH "Add your tracker <a href=\"https://mytorrent.retro-os.live/index.php/forum/tracker-submission\">link here</a>\n";
+print FH "</body>\n</html>\n";
+close (FH);
 exit 0;
