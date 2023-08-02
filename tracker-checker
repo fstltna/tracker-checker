@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use IO::Socket::PortState qw(check_ports);
+use Time::Piece;
 
 my $VERSION = "1.0";
 my $HOME = $ENV{HOME};
@@ -124,8 +125,10 @@ foreach (@Trackers)
 	CheckTracker();
 }
 
+my $date = localtime->strftime('%m/%d/%Y %H:%M:%S');
 print FH "</table>\n";
-print FH "Add your tracker <a href=\"https://mytorrent.retro-os.live/index.php/forum/tracker-submission\">link here</a>\n";
+print FH "Add your tracker <a href=\"https://mytorrent.retro-os.live/index.php/forum/tracker-submission\">link here</a><hr>\n";
+print FH "List updated: $date\n";
 print FH "</body>\n</html>\n";
 close (FH);
 exit 0;
