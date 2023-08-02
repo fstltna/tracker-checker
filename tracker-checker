@@ -92,6 +92,12 @@ sub CheckTracker
         my $host_hr = check_ports($CurHost, $timeout, \%port_hash);
         my $CurStatus = $host_hr->{tcp}{$CurPort}{open} ? "Active" : "Unreachable";
 	print "$CurStatus\n";
+
+	if ($DEBUG eq "on")
+	{
+		my $HostTable = sprintf("%-30s : %-5s : %s", $CurHost, $CurPort, $CurStatus);
+		print "$HostTable\n";
+	}
 }
 
 foreach (@Trackers)
