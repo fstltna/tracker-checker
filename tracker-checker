@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $VERSION = "1.0";
+my $HOME = $ENV{HOME};
+my $TRACKERSFILE = "$HOME/.trackers";
+my $TORRENT_COMMENT = "$HOME/.torrent_comment.txt";
+my @Trackers = ();
+my $MyComment = "";
+my $VERBOSE = "";
+
+print "tracker checker v$VERSION\n";
+print "============================\n";
+
+my $CurrentTracker = "";
+
+print "Loading in $HOME/.trackers:\n";
+if (! -f $TRACKERSFILE)
+{
+	print "trackers list not found, running updater:\n";
+	system("updatetrackers");
+}
+my $SawVersion = "";
+my $NumTrackers = 0;
+open my $file, '<', $TRACKERSFILE or die("Unable to open tracker file: $!");
+while(<$file>)
+{
+	my $CurLine = $_;
+	chop($CurLine);
+	if ($CurLine eq "")
+	{
+		next;
+	}
+	if ($SawVersion eq "")
+	{
+		print "File version: $CurLine\n";
+		$SawVersion = "true";
+	}
+	else
+	{
+		#print "Saw tracker: $CurLine\n";
+		push (@Trackers, $CurLine);
+		$NumTrackers += 1;
+	}
+}
+close $file;
+
+print "Saw $NumTrackers trackers\n";
+
+sub CheckTracker
+{
+	my $TrackerProtocol = "";
+	my $StrippedString = "";
+
+	if (substr($CurrentTracker, 0, 4) eq "http")
+	{
+		#print "Saw http line\n";
+		$TrackerProtocol = "http";
+		$StrippedString = substr($CurrentTracker, 7);
+		#print "stripped: $StrippedString\n";
+	}
+	elsif (substr($CurrentTracker, 0, 3) eq "udp")
+	{
+		#print "Saw udp line\n";
+		$TrackerProtocol = "udp";
+		$StrippedString = substr($CurrentTracker, 6);
+		#print "stripped: $StrippedString\n";
+	}
+	$StrippedString = substr($StrippedString, 0, -9);
+	print "stripped: $StrippedString\n";
+}
+
+foreach (@Trackers)
+{
+	#$TorrentCommand = "$TorrentCommand -t \"$_\"";
+	$CurrentTracker = $_;
+	print "Checking tracker: $CurrentTracker\n";
+	CheckTracker();
+}
+
+exit 0;
