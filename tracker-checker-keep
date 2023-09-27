@@ -2,17 +2,16 @@
 
 use strict;
 use warnings;
-#use IO::Socket::PortState qw(check_ports);
+use IO::Socket::PortState qw(check_ports);
 use Time::Piece;
-use Net::Telnet;
 
-my $VERSION = "1.1";
+my $VERSION = "1.0";
 my $HOME = $ENV{HOME};
 my $TRACKERSFILE = "$HOME/.trackers";
 my @Trackers = ();
 my $timeout=5;
 my $CurPort=0;
-my $DEBUG = "off";	# Set to "on" to enable
+my $DEBUG = "on";	# Set to "on" to enable
 my $WebFile = "/var/www/html/TrackerOutput.html";
 my $FileVersion = "";
 
@@ -39,31 +38,6 @@ my $CurrentTracker = "";
 
 print "Updating $HOME/.trackers:\n";
 system("updatetrackers \>/dev/null");
-
-sub attemptTelnetCheck {
-    my ($host, $port) = @_;
-
-    my $t = new Net::Telnet(
-        Errmode => 'return',
-        Timeout => 2,
-        Port    => $port
-    );
-    my $r = $t->open($host);
-    if (defined $r) {
-        $t->close();
-        if ($DEBUG eq "on")
-	{
-        	print("$host : SUCCESS!\n");
-	}
-	return("SUCCESS");
-    } else {
-        if ($DEBUG eq "on")
-	{
-        	print("$host : failure. " . $t->errmsg() . "\n");
-	}
-	return("FAIL");
-    }
-}
 
 my $SawVersion = "";
 my $NumTrackers = 0;
@@ -106,8 +80,10 @@ sub CheckTracker
 
 	if (substr($CurrentTracker, 0, 4) eq "http")
 	{
+		#print "Saw http line\n";
 		$TrackerProtocol = "http";
 		$StrippedString = substr($CurrentTracker, 7);
+		#print "stripped: $StrippedString\n";
 	}
 	elsif (substr($CurrentTracker, 0, 3) eq "udp")
 	{
@@ -126,8 +102,8 @@ sub CheckTracker
 	print "tracker: $StrippedString - ";
 
 	my ($CurHost, $CurPort)  = split(':', $StrippedString);
-	# ZZZ
-	my $CurStatus = attemptTelnetCheck($CurHost, $CurPort);
+        my $host_hr = check_ports($CurHost, $timeout, \%port_hash);
+        my $CurStatus = $host_hr->{tcp}{$CurPort}{open} ? "Active" : "Unreachable";
 	print "$CurStatus\n";
 	print FH "<tr><td>$TrackerProtocol</td><td>$CurHost</td><td>$CurPort</td><td>$CurStatus</td></tr>\n";
 	if ($DEBUG eq "on")
@@ -139,6 +115,7 @@ sub CheckTracker
 
 foreach (@Trackers)
 {
+	#$TorrentCommand = "$TorrentCommand -t \"$_\"";
 	$CurrentTracker = $_;
 	if ($DEBUG eq "on")
 	{
