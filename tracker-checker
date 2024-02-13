@@ -38,7 +38,7 @@ print "=========================\n";
 my $CurrentTracker = "";
 
 print "Updating $HOME/.trackers:\n";
-system("updatetrackers \>/dev/null");
+system("/root/tracker-checker/updatetrackers \>/dev/null");
 
 sub attemptTelnetCheck {
     my ($host, $port) = @_;

@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+#
+# Updates the list of torrent trackers
+
+my $HOME = $ENV{HOME};
+my $TRACKERSFILE = "$HOME/.trackers";
+my $TRACKERSTXT = "trackers.txt";
+my $SERVERFILES = "mytorrent.retro-os.live/$TRACKERSTXT";
+my $VERSION = "1.0";
+my $CURRENT_VERSION = "";
+
+print "updatetrackers - $VERSION\n";
+print "======================\n";
+print "Checking current file version: ";
+
+if (! -f $TRACKERSFILE)
+{
+	print "trackers list file not found, creating empty file\n";
+	open my $file, '>', $TRACKERSFILE or die("can't create trackers list $!");
+	$CURRENT_VERSION = "NEW FILE";
+	print $file "$CURRENT_VERSION\n";
+	close $file;
+}
+else
+{
+	open my $file, '<', $TRACKERSFILE;
+	my $FirstLine = <$file>;
+	chop($FirstLine);
+	close $file;
+	print "$FirstLine\n";
+	$CURRENT_VERSION = $FirstLine;
+}
+chdir ("/tmp");
+if (-f "$TRACKERSTXT")
+{
+	unlink("$TRACKERSTXT") or die("Unable to clear server list: $!");
+}
+print "Downloading the master server list:\n";
+system("wget $SERVERFILES > /dev/null 2>&1");
+
+if (! -f "$TRACKERSTXT")
+{
+	print "Unable to download the tracker list\n";
+	exit 1;
+}
+
+open my $file, '<', "$TRACKERSTXT" or die("Can't open tracker file: $!");
+my $FirstLine = <$file>;
+chop($FirstLine);
+close $file;
+$SERVER_VERSION = $FirstLine;
+if ($CURRENT_VERSION eq $SERVER_VERSION)
+{
+	print "Already up to date\n";
+	exit 0;
+}
+
+print "Server version is $SERVER_VERSION, updating your list\n";
+system("cp $TRACKERSTXT $TRACKERSFILE");
+print "Done...\n";
+exit 0;
